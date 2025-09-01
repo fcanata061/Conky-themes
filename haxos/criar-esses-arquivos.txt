@@ -1,0 +1,1 @@
+printf "• Estudar GPIO do RPi\n• Ler 'Red Guests' 13-19\n• Mandar email p/ mãe 23\n• Check updates\n• Lavar louça\n" > ~/.config/conky/haxos/todo.txt
