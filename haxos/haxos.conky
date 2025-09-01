@@ -1,0 +1,130 @@
+conky.config = {
+  update_interval = 1,
+  total_run_times = 0,
+  double_buffer = true,
+  no_buffers = true,
+  cpu_avg_samples = 2,
+  net_avg_samples = 2,
+  if_up_strictness = 'address',
+  background = false,
+
+  own_window = true,
+  own_window_type = 'dock',
+  own_window_transparent = true,
+  own_window_hints = 'undecorated,below,sticky,skip_taskbar,skip_pager',
+  own_window_colour = '000000',
+  own_window_argb_visual = true,
+  own_window_argb_value = 0,
+
+  alignment = 'top_left',
+  gap_x = 30,
+  gap_y = 30,
+  minimum_width = 1880, minimum_height = 1000, -- ajuste à sua resolução
+  draw_shades = false,
+  draw_outline = false,
+  draw_borders = false,
+  draw_graph_borders = false,
+
+  default_color = 'CFFDFD', -- ciano pálido
+  color0 = '00F0F0',  -- ciano vibrante
+  color1 = 'FF0040',  -- vermelho hax
+  color2 = 'FFFFFF',
+  color3 = 'A0A0A0',
+  color4 = '80FFE6',
+
+  use_xft = true,
+  font = 'Fira Code:size=10',
+  xftalpha = 1,
+
+  lua_load = '~/.config/conky/haxos/haxos_rings.lua',
+  lua_draw_hook_pre = '',
+
+  short_units = true,
+  top_cpu_separate = true,
+  temperature_unit = 'celsius',
+
+  -- permite execpi com curl/jq sem travar
+  text_buffer_size = 4096,
+};
+
+conky.text = [[
+${voffset -10}${font Fira Code:style=Bold:size=180}${color0}${time %H}${color1}:${color0}${time %M}${font}
+${voffset -140}${goto 270}${font Ubuntu Condensed:size=22}${color2}FORECAST${font}
+${goto 270}${color3}Temperature:${color2} ${execpi 1800 curl -fs "wttr.in?format=%t" || echo " N/A"} \
+${goto 600}${color3}Condition:${color2} ${execpi 1800 curl -fs "wttr.in?format=%C" || echo " N/A"}
+${goto 270}${color3}Feels:${color2} ${execpi 1800 curl -fs "wttr.in?format=%f" || echo " N/A"} \
+${goto 600}${color3}Wind:${color2} ${execpi 1800 curl -fs "wttr.in?format=%w" || echo " N/A"}
+${goto 270}${color3}Humidity:${color2} ${execpi 1800 curl -fs "wttr.in?format=%h" || echo " N/A"} \
+${goto 600}${color3}Sunrise:${color2} ${execpi 1800 curl -fs "wttr.in?format=%S" || echo " N/A"} \
+${goto 840}${color3}Sunset:${color2} ${execpi 1800 curl -fs "wttr.in?format=%s" || echo " N/A"}
+${voffset 12}${goto 270}${color3}Tomorrow:${color2} ${execpi 1800 curl -fs "wttr.in?format=Tomorrow:+%t,+%C" || echo " N/A"}
+
+# CALENDÁRIO
+${voffset 20}${goto 30}${font Ubuntu Condensed:size=22}${color2}CALENDAR${font}
+${goto 30}${color0}${execpi 300 cal -m | sed '1s/.*/\x0a &/'}
+
+# TODO
+${voffset -165}${goto 270}${font Ubuntu Condensed:size=22}${color2}TODO / RMBR${font}
+${goto 270}${color2}${execpi 10 sed -n '1,8p' ~/.config/conky/haxos/todo.txt | nl -w1 -s'. '}
+
+# SLASHDOT / FEED (usa curl + sed; simples)
+${voffset 10}${goto 30}${font Ubuntu Condensed:size=22}${color2}SLASHDOT / FEED${font}
+${goto 30}${color2}${execpi 1800 curl -fs "https://rss.slashdot.org/Slashdot/slashdotMain" \
+| sed -n 's:.*<title><!\\[CDATA\\[\\(.*\\)\\]\\]>.*:\\1:p' | sed '1d' | head -n 12 \
+| nl -w2 -s'. '}
+
+# MPD
+${voffset 16}${goto 30}${font Ubuntu Condensed:size=22}${color2}MUSIC PLAYER DAEMON${font}
+${goto 30}${color3}Status:${color2} ${exec mpc | sed -n '2p' | awk '{print $1}' || echo "stopped"} \
+${goto 220}${color3}Volume:${color2} ${exec mpc volume | awk '{print $2}'} \
+${goto 400}${color3}Title:${color2} ${exec mpc current}
+${goto 30}${execbar 2 mpc | sed -n '2p' | awk -F'[][]' '{print $2}' | sed 's/%//'} 
+
+# TCP / TOR (placeholders simples de conexões ESTAB)
+${voffset -250}${goto 980}${font Ubuntu Condensed:size=22}${color2}TCP / TOR${font}${font}
+${goto 980}${color3}ESTAB TCP:${color2} ${execpi 10 ss -tan state established | tail -n +2 | wc -l}   \
+${goto 1180}${color3}LISTEN:${color2} ${execpi 30 ss -tan state listen | tail -n +2 | wc -l}   \
+${goto 1360}${color3}127.0.0.1:${color2} ${execpi 10 ss -tan | grep 127.0.0.1 | wc -l}
+
+# SPEEDTEST (mede a cada 30 min para não abusar)
+${voffset 10}${goto 980}${font Ubuntu Condensed:size=22}${color2}SPEEDTEST.NET${font}
+${goto 980}${color3}Ping:${color2} ${execpi 1800 speedtest-cli --simple 2>/dev/null | awk '/Ping/{print $2" "$3}'} \
+${goto 1140}${color3}Download:${color2} ${execpi 1800 speedtest-cli --simple 2>/dev/null | awk '/Download/{print $2" "$3}'} \
+${goto 1360}${color3}Upload:${color2} ${execpi 1800 speedtest-cli --simple 2>/dev/null | awk '/Upload/{print $2" "$3}'}
+
+# LOGO / NOME
+${voffset -60}${goto 1580}${font Ubuntu Condensed:size=36}${color1}hax${color0}OS${font}
+
+# PAINEL DIREITO — SISTEMA
+${voffset 20}${goto 980}${font Ubuntu Condensed:size=22}${color2}system${font}
+${goto 980}${color3}kernel:${color2} ${kernel}   \
+${goto 1180}${color3}arch:${color2} ${machine}   \
+${goto 1360}${color3}uptime:${color2} ${uptime_short}
+${goto 980}${color3}[${color0}${freq_g 1}${color3}] cpu1  ${goto 1180}${color3}[${color0}${freq_g 2}${color3}] cpu2  ${goto 1360}${color3}[${color0}${freq_g 3}${color3}] cpu3  \
+${goto 980}${color3}load:${color2} ${loadavg}
+
+# anéis CPU (ajuste coordenadas conforme sua resolução)
+${lua ring ${cpu cpu1} 100 1600 260 38 6 0 240 240 0.9}
+${lua ring ${cpu cpu2} 100 1700 260 38 6 0 240 240 0.9}
+${lua ring ${cpu cpu3} 100 1600 360 38 6 0 240 240 0.9}
+${lua ring ${cpu cpu4} 100 1700 360 38 6 0 240 240 0.9}
+
+${voffset 80}${goto 980}${color3}processes:${color2} ${processes}   ${goto 1180}${color3}running:${color2} ${running_processes}   \
+${goto 1360}${color3}temperature:${color2} ${execi 10 sensors | awk '/^Package id 0:|^Tctl:|^Tdie:/{print $4; exit}'} C
+
+${voffset 8}${goto 980}${color3}RAM used:${color2} ${mem} / ${memmax} ${goto 1360}${color3}swap:${color2} ${swap} / ${swapmax}
+${goto 980}${membar 8}
+${goto 1360}${swapbar 8}
+
+${voffset 8}${goto 980}${color3}root:${color2} ${fs_used /} / ${fs_size /} ${goto 1360}${color3}home:${color2} ${fs_used /home} / ${fs_size /home}
+${goto 980}${fs_bar 8 /}
+${goto 1360}${fs_bar 8 /home}
+
+${voffset 8}${goto 980}${color3}net:${color2} ${addr}  \
+${goto 1180}${color3}up:${color2} ${upspeedf} k/s  ${goto 1360}${color3}down:${color2} ${downspeedf} k/s
+${goto 980}${upspeedgraph 20,420}  ${goto 1360}${downspeedgraph 20,420}
+
+${voffset 8}${goto 980}${color3}connections in/out:${color2} ${tcp_portmon 1 65535 count}/${tcp_portmon 1 65535 rhost 0}
+${goto 980}${color3}total down:${color2} ${totaldown}   ${goto 1360}${color3}total up:${color2} ${totalup}
+
+]];
